@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - MIT Academy of Engineering{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #a78bfa, #2dd4bf);" onclick="window.location.href='?status=all'" aria-label="Show all complaints">
+                <div class="category-icon" style="color:#fff !important;">
+                    <i class="bi bi-list-ul"></i>
+                </div>
+                <h3 class="mb-2 countup" data-count="{{ complaints|length }}" style="color:#fff !important; font-weight:900;">0</h3>
+                <p class="mb-0" style="color:#fff !important; font-weight:600;">Total Complaints</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #fbbf24, #fde68a);" onclick="window.location.href='?status=pending'" aria-label="Show pending complaints">
+                <div class="category-icon" style="color:#222 !important;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <h3 class="mb-2 countup" data-count="{{ complaints|selectattr('status', 'equalto', 'pending')|list|length }}" style="color:#222 !important; font-weight:900;">0</h3>
+                <p class="mb-0" style="color:#222 !important; font-weight:600;">Pending</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #a78bfa, #2dd4bf);" onclick="window.location.href='?status=in_progress'" aria-label="Show in progress complaints">
+                <div class="category-icon" style="color:#fff !important;">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                <h3 class="mb-2 countup" data-count="{{ complaints|selectattr('status', 'equalto', 'in_progress')|list|length }}" style="color:#fff !important; font-weight:900;">0</h3>
+                <p class="mb-0" style="color:#fff !important; font-weight:600;">In Progress</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #22c55e, #34d399);" onclick="window.location.href='?status=resolved'" aria-label="Show resolved complaints">
+                <div class="category-icon" style="color:#fff !important;">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <h3 class="mb-2 countup" data-count="{{ complaints|selectattr('status', 'equalto', 'resolved')|list|length }}" style="color:#fff !important; font-weight:900;">0</h3>
+                <p class="mb-0" style="color:#fff !important; font-weight:600;">Resolved</p>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="gradient-heading mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </h2>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <form class="d-flex me-2" method="get" action="">
+                <input class="form-control me-2" type="search" name="q" placeholder="Search by subject or ID" aria-label="Search complaints">
+                <button class="btn btn-outline-primary" type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
+            </form>
+            <select class="form-select" style="max-width:180px;" name="status" onchange="window.location.href='?status='+this.value">
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+            </select>
+            <a href="{{ url_for('view_history') }}" class="btn btn-outline-info me-2" aria-label="View complaint history">
+                <i class="bi bi-clock-history me-1"></i>View History
+            </a>
+            <a href="{{ url_for('submit_complaint') }}" class="btn btn-primary me-2" aria-label="Submit new complaint">
+                <i class="bi bi-plus-circle-fill me-2"></i>Submit New Complaint
+            </a>
+            {% if user.role == 'admin' %}
+            <form method="POST" action="{{ url_for('reset_db') }}" onsubmit="return confirm('Are you sure you want to reset the database? This will delete all complaints, notifications, and student logins.');" style="display:inline;">
+                {{ csrf_token() }}
+                <button type="submit" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Deletes all student data and complaints.">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Reset Database
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modern-card">
+        <div class="card-body">
+            <h4 class="gradient-heading mb-4">
+                <i class="bi bi-list-ul me-2"></i>Active Complaints
+            </h4>
+            {% set active_complaints = complaints|selectattr('status', 'ne', 'resolved')|list %}
+            {% if active_complaints %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-modern table-hover align-middle rounded">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Category</th>
+                                <th scope="col">Subject</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Submitted</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for complaint in active_complaints %}
+                            <tr>
+                                <th scope="row" style="color:#fff;">{{ complaint.id }}</th>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-{{ 'person-badge-fill' if complaint.category == 'teacher' else 'person-fill' if complaint.category == 'student' else 'people-fill' if complaint.category == 'staff' else 'building' }} me-1" aria-label="{{ complaint.category.title() }}"></i>
+                                        <span style="color:#fff;">{{ complaint.category.title() }}</span>
+                                    </span>
+                                </td>
+                                <td style="color:#fff;">{{ complaint.subject }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ complaint.status.replace('_', '-') }}">
+                                        {% if complaint.status == 'pending' %}
+                                            <i class="bi bi-hourglass-split me-1" aria-label="Pending"></i>Pending
+                                        {% elif complaint.status == 'in_progress' %}
+                                            <i class="bi bi-arrow-repeat me-1" aria-label="In Progress"></i>In Progress
+                                        {% else %}
+                                            <i class="bi bi-check2-circle me-1" aria-label="Resolved"></i>Resolved
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td style="color:#fff;">{{ complaint.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_complaint', complaint_id=complaint.id) }}" class="action-btn" aria-label="View complaint" data-bs-toggle="tooltip" title="View">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </a>
+                                    {% if user.role == 'admin' %}
+                                    <form method="POST" action="{{ url_for('delete_complaint', complaint_id=complaint.id) }}" style="display:inline;">
+                                        {{ csrf_token() }}
+                                        <button type="submit" class="action-btn" aria-label="Delete complaint" data-bs-toggle="tooltip" title="Delete" onclick="return confirm('Are you sure you want to delete this complaint?');">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4 text-center">
+                    <i class="bi bi-info-circle-fill fa-2x mb-2"></i><br>
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="No Complaints" style="height:80px;width:auto;opacity:0.7;" class="mb-2"><br>
+                    No active complaints. Click "View History" to see all complaints.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>
+.stats-card {
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.stats-card:hover {
+    transform: scale(1.04) translateY(-6px);
+    box-shadow: 0 16px 40px rgba(167,139,250,0.22), 0 2px 8px rgba(0,0,0,0.12);
+    z-index: 2;
+}
+.countup {
+    font-variant-numeric: tabular-nums;
+}
+.table-modern {
+    border-radius: 1rem;
+    overflow: hidden;
+    background: var(--card-bg);
+    box-shadow: 0 2px 12px rgba(167,139,250,0.10);
+}
+.table-modern th, .table-modern td {
+    vertical-align: middle;
+}
+.table-modern tbody tr {
+    transition: background 0.15s;
+}
+.table-modern tbody tr:hover {
+    background: #232bfa22;
+}
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+}
+.action-btn {
+    border: none;
+    background: none;
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+    transition: color 0.15s, transform 0.15s;
+}
+.action-btn:hover {
+    color: var(--warning);
+    transform: scale(1.15);
+}
+@media (max-width: 768px) {
+    .stats-card { margin-bottom: 1.2rem !important; }
+    .table-responsive { font-size: 0.98rem; }
+}
+</style>
+<script>
+// Count up animation for stats
+window.onload = function() {
+    function animateCountUp(el, target) {
+        let start = 0;
+        let duration = 900;
+        let startTime = null;
+        function animate(time) {
+            if (!startTime) startTime = time;
+            let progress = Math.min((time - startTime) / duration, 1);
+            el.textContent = Math.floor(progress * (target - start) + start);
+            if (progress < 1) requestAnimationFrame(animate);
+            else el.textContent = target;
+        }
+        requestAnimationFrame(animate);
+    }
+    document.querySelectorAll('.countup').forEach(function(el) {
+        let target = parseInt(el.getAttribute('data-count'));
+        animateCountUp(el, target);
+    });
+};
+</script>
+{% endblock %} 

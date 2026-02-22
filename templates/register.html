@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Register - MIT Academy of Engineering{% endblock %}
+
+{% block content %}
+<div class="main-content d-flex flex-column align-items-center justify-content-center" style="min-height:80vh;background:none;box-shadow:none;padding:0;">
+    <div class="w-100" style="max-width:420px;">
+        <div class="card p-4" style="border-radius:1.5rem;box-shadow:0 4px 24px #232bfa18,0 2px 8px #a78bfa11;">
+            <div class="text-center mb-4">
+                <h2 class="gradient-heading mb-1" style="font-size:2rem;font-weight:900;">Student Registration</h2>
+                <p class="text-muted mb-0" style="font-size:1.05rem;">Create your MITAOE account</p>
+            </div>
+            <form method="POST" action="{{ url_for('register') }}" id="registerForm" novalidate>
+                {{ csrf_token() }}
+                <div class="mb-3">
+                    <label for="name" class="form-label" style="font-weight:700;">
+                        <i class="bi bi-person-fill me-2"></i>Full Name
+                    </label>
+                    <input type="text" class="form-control register-input-clean" id="name" name="name" required autocomplete="name">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label" style="font-weight:700;">
+                        <i class="bi bi-envelope-at me-2"></i>MITAOE Email
+                    </label>
+                    <input type="email" class="form-control register-input-clean" id="email" name="email" placeholder="yourname@mitaoe.ac.in" required autocomplete="username">
+                    <div class="form-text" style="color:#a78bfa;font-weight:600;">
+                        <i class="bi bi-info-circle me-1"></i>Only <b>@mitaoe.ac.in</b> email addresses are allowed
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label" style="font-weight:700;">
+                        <i class="bi bi-lock-fill me-2"></i>Password
+                    </label>
+                    <input type="password" class="form-control register-input-clean" id="password" name="password" required autocomplete="new-password">
+                    <div class="form-text">Password must be at least 6 characters long.</div>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg register-btn-clean" style="font-size:1.12rem;font-weight:800;">
+                        <i class="bi bi-person-plus-fill me-2"></i>Create Account
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('login') }}" class="login-link-clean" style="font-weight:700;font-size:1.05rem;text-decoration:none;">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Already have an account? Login
+            </a>
+        </div>
+    </div>
+</div>
+<style>
+    .register-input-clean {
+        background: #23232a !important;
+        color: #e5e7eb !important;
+        border: 2px solid #232bfa !important;
+        border-radius: 0.7rem !important;
+        font-size: 1.05rem;
+        font-weight: 500;
+        box-shadow: none !important;
+        padding-left: 0.7rem;
+        margin-bottom: 0.2rem;
+        transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .register-input-clean:focus {
+        border: 2px solid #a78bfa !important;
+        outline: none;
+        box-shadow: 0 2px 12px #a78bfa33;
+        background: #23232a !important;
+        color: #fff !important;
+    }
+    .register-btn-clean {
+        background: linear-gradient(90deg, #232bfa, #a78bfa);
+        color: #fff !important;
+        font-weight: 800;
+        border-radius: 1.2rem;
+        box-shadow: 0 2px 12px #a78bfa22;
+        transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+    }
+    .register-btn-clean:hover, .register-btn-clean:focus {
+        background: linear-gradient(90deg, #a78bfa, #232bfa);
+        transform: scale(1.03);
+        box-shadow: 0 4px 24px #a78bfa44;
+    }
+    .login-link-clean {
+        color: #a78bfa;
+        border-radius: 1.2rem;
+        padding: 0.2rem 1.1rem;
+        transition: color 0.18s, background 0.18s, text-decoration 0.18s;
+        border-bottom: 2px solid transparent;
+    }
+    .login-link-clean:hover, .login-link-clean:focus {
+        color: #2dd4bf;
+        border-bottom: 2px solid #2dd4bf;
+        text-decoration: none;
+        background: rgba(45,212,191,0.08);
+    }
+</style>
+<script>
+const regForm = document.getElementById('registerForm');
+if (regForm) {
+    regForm.addEventListener('submit', function(e) {
+        let valid = true;
+        const email = regForm.email;
+        const password = regForm.password;
+        // Email validation
+        if (!email.value.endsWith('@mitaoe.ac.in')) {
+            email.classList.add('is-invalid');
+            valid = false;
+        } else {
+            email.classList.remove('is-invalid');
+        }
+        // Password validation
+        if (password.value.length < 6) {
+            password.classList.add('is-invalid');
+            valid = false;
+        } else {
+            password.classList.remove('is-invalid');
+        }
+        if (!valid) {
+            e.preventDefault();
+            return false;
+        }
+        // Spinner
+        const btn = regForm.querySelector('button[type=submit]');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
+    });
+}
+</script>
+{% endblock %} 

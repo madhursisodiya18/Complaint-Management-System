@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}View Complaint - MIT Academy of Engineering{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Complaint Status Timeline -->
+            <div class="timeline">
+                <div class="timeline-step">
+                    <div class="timeline-dot" style="background: linear-gradient(90deg, #fbbf24, #fde68a);"></div>
+                    <div class="timeline-label">Pending</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-dot {% if complaint.status in ['in_progress', 'resolved'] %}timeline-dot-active{% endif %}" style="background: linear-gradient(90deg, #a78bfa, #2dd4bf);"></div>
+                    <div class="timeline-label">In Progress</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-dot {% if complaint.status == 'resolved' %}timeline-dot-active{% endif %}" style="background: linear-gradient(90deg, #22c55e, #34d399);"></div>
+                    <div class="timeline-label">Resolved</div>
+                </div>
+            </div>
+            <!-- Complaint Details -->
+            <div class="modern-card mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 gradient-heading">
+                            <i class="fas fa-file-alt me-2"></i>Complaint #{{ complaint.id }}
+                        </h4>
+                        <span class="status-badge status-{{ complaint.status.replace('_', '-') }}">
+                            {% if complaint.status == 'pending' %}
+                                <i class="fas fa-clock me-1"></i>Pending
+                            {% elif complaint.status == 'in_progress' %}
+                                <i class="fas fa-spinner me-1"></i>In Progress
+                            {% else %}
+                                <i class="fas fa-check-circle me-1"></i>Resolved
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong class="gradient-heading"><i class="fas fa-tag me-2"></i>Category:</strong>
+                            <span class="badge bg-secondary ms-2">
+                                <i class="fas fa-{{ 'chalkboard-teacher' if complaint.category == 'teacher' else 'user-graduate' if complaint.category == 'student' else 'users-cog' if complaint.category == 'staff' else 'building' }} me-1"></i>
+                                {{ complaint.category.title() }}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="gradient-heading"><i class="fas fa-user me-2"></i>Submitted By:</strong>
+                            <span class="ms-2">{{ complaint.user.name }}</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong class="gradient-heading"><i class="fas fa-calendar me-2"></i>Submitted:</strong>
+                            <span class="ms-2">{{ complaint.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        </div>
+                        {% if complaint.resolved_at %}
+                            <div class="col-md-6">
+                                <strong class="gradient-heading"><i class="fas fa-check-circle me-2"></i>Resolved:</strong>
+                                <span class="ms-2">{{ complaint.resolved_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <strong class="gradient-heading"><i class="fas fa-heading me-2"></i>Subject:</strong>
+                        <p class="mt-2">{{ complaint.subject }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong class="gradient-heading"><i class="fas fa-align-left me-2"></i>Description:</strong>
+                        <div class="mt-2 p-3 description-view-box rounded">
+                            {{ complaint.description|replace('\n', '<br>')|safe }}
+                        </div>
+                    </div>
+                    {% if complaint.admin_response %}
+                        <hr>
+                        <div class="mb-3">
+                            <strong class="gradient-heading"><i class="fas fa-reply me-2"></i>Admin Response:</strong>
+                            <div class="mt-2 p-3 rounded" style="background:linear-gradient(90deg,#a78bfa,#2dd4bf);color:#fff;">
+                                {{ complaint.admin_response|replace('\n', '<br>')|safe }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <!-- Admin Actions -->
+            {% if user.role == 'admin' %}
+                <div class="modern-card mb-4">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="mb-0 gradient-heading">
+                            <i class="fas fa-cogs me-2"></i>Admin Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('update_complaint', complaint_id=complaint.id) }}">
+                            {{ csrf_token() }}
+                            <div class="mb-3">
+                                <label for="status" class="form-label gradient-heading">
+                                    <i class="fas fa-flag me-2"></i>Update Status
+                                </label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="pending" {{ 'selected' if complaint.status == 'pending' }}>Pending</option>
+                                    <option value="in_progress" {{ 'selected' if complaint.status == 'in_progress' }}>In Progress</option>
+                                    <option value="resolved" {{ 'selected' if complaint.status == 'resolved' }}>Resolved</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin_response" class="form-label gradient-heading">
+                                    <i class="fas fa-comment me-2"></i>Admin Response
+                                </label>
+                                <textarea class="form-control" id="admin_response" name="admin_response" rows="4" placeholder="Provide a response or update...">{{ complaint.admin_response or '' }}</textarea>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Update Complaint
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+            <!-- Quick Actions -->
+            <div class="modern-card">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0 gradient-heading">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <a href="{{ url_for('submit_complaint') }}" class="btn btn-outline-success">
+                            <i class="fas fa-plus-circle me-2"></i>Submit New Complaint
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Messages - Complaint Management System{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="card-title">Contact Messages</h2>
+        <form class="d-flex" method="get" action="">
+            <input class="form-control me-2" type="search" name="q" placeholder="Search messages" aria-label="Search messages">
+            <select class="form-select me-2" name="status">
+                <option value="all">All</option>
+                <option value="unresolved">Unresolved</option>
+                <option value="resolved">Resolved</option>
+            </select>
+            <button class="btn btn-outline-primary" type="submit">Filter</button>
+        </form>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Received</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in messages %}
+                        <tr>
+                            <td>{{ m.id }}</td>
+                            <td>{{ m.name }}</td>
+                            <td>{{ m.email }}</td>
+                            <td style="max-width:520px;word-break:break-word;">{{ m.message }}</td>
+                            <td>
+                                {% if m.status == 'resolved' %}
+                                    <span class="badge status-resolved">Resolved</span>
+                                {% elif m.status == 'in_progress' %}
+                                    <span class="badge status-in-progress">In Progress</span>
+                                {% else %}
+                                    <span class="badge status-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ m.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin_message_view', message_id=m.id) }}">View</a>
+                                <form method="POST" action="{{ url_for('update_message_status', message_id=m.id) }}" style="display:inline;" class="ms-1">
+                                    {{ csrf_token() }}
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="btn btn-warning btn-sm">In Progress</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('update_message_status', message_id=m.id) }}" style="display:inline;" class="ms-1">
+                                    {{ csrf_token() }}
+                                    <input type="hidden" name="status" value="resolved">
+                                    <button type="submit" class="btn btn-success btn-sm">Resolved</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

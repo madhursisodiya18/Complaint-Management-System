@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Message #{{ message.id }} - Complaint Management System{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="card-title">Message #{{ message.id }}</h2>
+        <a href="{{ url_for('admin_messages') }}" class="btn btn-outline-info"><i class="bi bi-arrow-left me-1"></i>Back</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3"><strong>Name:</strong> {{ message.name }}</div>
+            <div class="mb-3"><strong>Email:</strong> {{ message.email }}</div>
+            <div class="mb-3"><strong>Received:</strong> {{ message.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            <div class="mb-3"><strong>Status:</strong>
+                {% if message.status == 'resolved' %}
+                    <span class="badge status-resolved">Resolved</span>
+                {% elif message.status == 'in_progress' %}
+                    <span class="badge status-in-progress">In Progress</span>
+                {% else %}
+                    <span class="badge status-pending">Pending</span>
+                {% endif %}
+            </div>
+            <div class="mb-3"><strong>Message:</strong>
+                <div class="description-view-box p-3 mt-2">{{ message.message }}</div>
+            </div>
+            <div class="d-flex gap-2">
+                <form method="POST" action="{{ url_for('update_message_status', message_id=message.id) }}">
+                    {{ csrf_token() }}
+                    <input type="hidden" name="status" value="in_progress">
+                    <button type="submit" class="btn btn-warning">Mark In Progress</button>
+                </form>
+                <form method="POST" action="{{ url_for('update_message_status', message_id=message.id) }}">
+                    {{ csrf_token() }}
+                    <input type="hidden" name="status" value="resolved">
+                    <button type="submit" class="btn btn-success">Mark Resolved</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

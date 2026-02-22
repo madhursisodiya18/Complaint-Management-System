@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint History - MIT Academy of Engineering{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="gradient-heading mb-0">
+            <i class="bi bi-clock-history me-2"></i>Complaint History
+        </h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-info" aria-label="Back to Dashboard">
+            <i class="bi bi-speedometer2 me-1"></i>Back to Dashboard
+        </a>
+    </div>
+    <div class="mb-4 d-flex gap-2 flex-wrap align-items-center">
+        <form class="d-flex me-2" method="get" action="">
+            <input class="form-control me-2" type="search" name="q" placeholder="Search by subject or ID" aria-label="Search complaints">
+            <button class="btn btn-outline-primary" type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
+        </form>
+        <a href="?status=all" class="btn btn-outline-primary btn-sm">All</a>
+        <a href="?status=pending" class="btn btn-outline-warning btn-sm">Pending</a>
+        <a href="?status=in_progress" class="btn btn-outline-info btn-sm">In Progress</a>
+        <a href="?status=resolved" class="btn btn-outline-success btn-sm">Resolved</a>
+        <span class="ms-auto text-muted small">Showing {{ complaints|length }} complaint{{ '' if complaints|length == 1 else 's' }}.</span>
+    </div>
+    <div class="modern-card">
+        <div class="card-body">
+            <h4 class="gradient-heading mb-4">
+                <i class="bi bi-list-ul me-2"></i>All Complaints (Timeline)
+            </h4>
+            {% if complaints %}
+                <div class="timeline-vertical">
+                    {% for complaint in complaints %}
+                    <div class="timeline-item mb-4 d-flex align-items-start">
+                        <div class="timeline-dot timeline-dot-{{ complaint.status }} me-3 mt-1">
+                            {% if complaint.status == 'pending' %}
+                                <i class="bi bi-hourglass-split text-warning"></i>
+                            {% elif complaint.status == 'in_progress' %}
+                                <i class="bi bi-arrow-repeat text-info"></i>
+                            {% else %}
+                                <i class="bi bi-check2-circle text-success"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold mb-1 d-flex align-items-center">
+                                #{{ complaint.id }} - {{ complaint.subject }}
+                                <button class="btn btn-link btn-sm ms-2 p-0" type="button" data-bs-toggle="collapse" data-bs-target="#complaintDetails{{ complaint.id }}" aria-expanded="false" aria-controls="complaintDetails{{ complaint.id }}" title="Show details">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                                <a href="{{ url_for('view_complaint', complaint_id=complaint.id) }}" class="btn btn-link btn-sm ms-2 p-0" aria-label="View complaint" title="View">
+                                    <i class="bi bi-eye-fill"></i>
+                                </a>
+                            </div>
+                            <div class="small text-muted mb-1">{{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <span class="status-badge status-{{ complaint.status.replace('_', '-') }}">
+                                {% if complaint.status == 'pending' %}
+                                    <i class="bi bi-hourglass-split me-1" aria-label="Pending"></i>Pending
+                                {% elif complaint.status == 'in_progress' %}
+                                    <i class="bi bi-arrow-repeat me-1" aria-label="In Progress"></i>In Progress
+                                {% else %}
+                                    <i class="bi bi-check2-circle me-1" aria-label="Resolved"></i>Resolved
+                                {% endif %}
+                            </span>
+                            <div class="collapse mt-2" id="complaintDetails{{ complaint.id }}">
+                                <div class="card card-body bg-dark text-light p-3">
+                                    <div class="mb-2"><strong>Category:</strong> {{ complaint.category.title() }}</div>
+                                    <div class="mb-2"><strong>Description:</strong> {{ complaint.description }}</div>
+                                    {% if complaint.admin_response %}
+                                    <div class="mb-2"><strong>Admin Response:</strong> {{ complaint.admin_response }}</div>
+                                    {% endif %}
+                                    {% if complaint.resolved_at %}
+                                    <div class="mb-2"><strong>Resolved At:</strong> {{ complaint.resolved_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4 text-center">
+                    <i class="bi bi-emoji-smile fa-2x mb-2"></i><br>
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="No Complaints" style="height:80px;width:auto;opacity:0.7;" class="mb-2"><br>
+                    No complaints found. Submit a new complaint to get started!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>
+.timeline-vertical {
+    border-left: 4px solid #a78bfa;
+    margin-left: 1.5rem;
+    padding-left: 2rem;
+}
+.timeline-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #23232a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    box-shadow: 0 0 0 4px #2dd4bf44, 0 0 0 8px #a78bfa22;
+}
+.timeline-dot-pending { background: #fbbf24; color: #222; }
+.timeline-dot-in_progress { background: #2dd4bf; color: #fff; }
+.timeline-dot-resolved { background: #22c55e; color: #fff; }
+</style>
+{% endblock %} 
